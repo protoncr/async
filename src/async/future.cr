@@ -142,9 +142,7 @@ module Async
     def result=(value : T)
       @state = State::Completed
       @result = value
-      unless @channel.closed?
-        @channel.close
-      end
+      @channel.send(nil)
       value
     end
 
@@ -153,7 +151,7 @@ module Async
         value = Exception.new(value)
       end
       @state = State::Completed
-      @channel.close
+      @channel.send(nil)
       @error = value
     end
 
@@ -169,23 +167,24 @@ module Async
     end
 
     def wait : T?
-      if @state <= State::Completed
+      unless @channel.closed?
         @channel.receive
+        @channel.close
       end
       @result
     end
 
     def wait! : T
-      result = wait
+      ret = wait
 
       if error = @error
         raise error
       end
 
       if T.nilable?
-        result
+        ret
       else
-        result.not_nil!
+        ret.not_nil!
       end
     end
 
@@ -218,6 +217,7 @@ module Async
 
       begin
         self.result = callback.call
+        @state = State::Completed
       rescue ex
         error = ex
       end

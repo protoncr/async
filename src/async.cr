@@ -2,7 +2,9 @@ require "./async/*"
 
 # TODO: Docs
 module Async
-
+  def self.ensure_future(future)
+    Future.execute { await future }
+  end
 end
 
 macro async(method)
@@ -36,7 +38,3 @@ macro await!(method)
   end
   %future.wait!
 end
-
-f = Async::Future(Nil).new
-f.result = nil
-pp f
