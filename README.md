@@ -64,7 +64,7 @@ future.wait!
 
 Async also includes the loved and hated `async` / `await`.
 
-The `async` macro works by wrapping the body of your function in a `Future.execute` callback. This brings with it the draw back that you won't be able to use `return` inside of your functions, but `next` should work if you need to exit early and return a value.
+The `async` macro basically works by wrapping the body of your function in a `Future` and executing that future immediately. Theoretically most functions should work just fine as async functions, but more complex function definitions are still untested. Most specifically functions with blocks.
 
 `await` can be used on async methods and futures to wait for the return value. All it really does currently is call `.wait`.
 
