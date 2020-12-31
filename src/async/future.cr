@@ -65,6 +65,30 @@ module Async
       yield self.all(*futures)
     end
 
+    def self.any(*futures : Future(U)) forall U
+      channel = Channel(U?).new(1)
+
+      futures.each do |f|
+        spawn do
+          if f.state <= State::Completed
+            f.wait
+          end
+
+          if f.completed?
+            channel.send(f.result) if !channel.closed?
+          end
+        end
+      end
+
+      value = channel.receive
+      channel.close
+      value
+    end
+
+    def self.any(*futures : Future(U), &block : U ->) forall U
+      yield self.any(*futures)
+    end
+
     def self.race(*futures : Future(U)) forall U
       channel = Channel(U?).new(1)
 
@@ -117,12 +141,11 @@ module Async
 
     def result=(value : T)
       @state = State::Completed
-      @result = result = value
+      @result = value
       unless @channel.closed?
-        @channel.send(nil)
         @channel.close
       end
-      result
+      value
     end
 
     def error=(value : String | Exception)

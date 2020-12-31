@@ -36,3 +36,7 @@ macro await!(method)
   end
   %future.wait!
 end
+
+f = Async::Future(Nil).new
+f.result = nil
+pp f
