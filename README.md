@@ -99,7 +99,7 @@ Async also includes the loved and hated `async` / `await`.
 
 The `async` macro basically works by wrapping the body of your function in a `Future` and executing that future immediately. Theoretically most functions should work just fine as async functions, but more complex function definitions are still untested. Most specifically functions with blocks.
 
-`await` can be used on async methods and futures to wait for the return value. All it really does currently is call `.wait`.
+`await` can be used on async methods and futures to wait for the return value. All it really does currently is call `.wait!`. If an exception is raised inside the future `await` will raise an `Async::UncaughtException` which contains the uncaught exception.
 
 ## Contributing
 
