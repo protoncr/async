@@ -60,6 +60,39 @@ future.wait!
 # => Unhandled exception: Arithmetic overflow (OverflowError)
 ```
 
+#### `.all` / `.any` / `.race`
+
+Insipred by the JavaScript promise methods with the same names, the `.all`, `.any`, and `.race` methods can be used to wait for certain things to happen with your futures.
+
+`.all` accepts _N_ futures and will wait for them all to finish before returning. The return value of `.all` is an `Array(T)` where `T` is the type(s) of the futures.
+
+`.any` accepts _N_ futures and returns the value of the first future to complete successfully.
+
+`.race` is similar to `.all`, but it returns the first time a future finishes, whether successful or not.
+
+**Example:**
+```crystal
+fut1 = Async::Future.execute do
+  loop do
+    num = rand(1..99)
+    sleep num
+    puts "f1 " + num.to_s
+    break if num == 69
+  end
+end
+
+fut2 = Async::Future.execute do
+  loop do
+    num = rand(1..99)
+    sleep num
+    puts "f2 " + num.to_s
+    break if num == 69
+  end
+end
+
+Async::Future.all(fut1, fut2)
+```
+
 ### `async` / `await`
 
 Async also includes the loved and hated `async` / `await`.

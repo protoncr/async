@@ -140,18 +140,13 @@ module Async
     end
 
     def result=(value : T)
-      @state = State::Completed
       @result = value
-      @channel.send(nil)
-      value
     end
 
     def error=(value : String | Exception)
       if value.is_a?(String)
         value = Exception.new(value)
       end
-      @state = State::Completed
-      @channel.send(nil)
       @error = value
     end
 
@@ -189,11 +184,11 @@ module Async
     end
 
     def cancel
+      @channel.close
       if @state >= State::Completed
         false
       else
         @state = State::Canceled
-        @channel.close
         true
       end
     end
@@ -218,8 +213,10 @@ module Async
       begin
         self.result = callback.call
         @state = State::Completed
+        @channel.send(nil)
       rescue ex
         error = ex
+        @channel.send(nil)
       end
     end
   end
