@@ -42,13 +42,15 @@ end
 
 macro await(method)
   %future = {{ method }}
+
   unless %future.is_a?(Async::Future)
     raise "await can only be used on async methods"
   end
+
   begin
-    %future.wait
+    %future.wait!
   rescue ex
-    raise Async::UncaughtException.new(ex)
+    raise Async::UncaughtException.new(%future, ex)
   end
 end
 

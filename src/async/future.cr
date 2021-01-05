@@ -12,33 +12,35 @@ module Async
     getter result : T?
     getter error : Exception?
 
+    property name : String?
     property delay : Int32
     property callback : Proc(T)?
 
     @channel : Channel(Nil)
     @fiber : Fiber?
 
-    def initialize(*, delay = 0, callback : Proc(T)?)
+    def initialize(*, name : String? = nil, delay = 0, callback : Proc(T)?)
+      @name = name
       @state = State::Idle
       @delay = delay
       @callback = callback
       @channel = Channel(Nil).new
     end
 
-    def self.new(**args, &block : -> T)
-      new(**args, callback: block)
+    def self.new(*args, **kwargs, &block : -> T)
+      new(*args, **kwargs, callback: block)
     end
 
-    def self.new(*, delay = 0)
-      new(delay: delay, callback: nil)
+    def self.new(*args, **kwargs)
+      new(*args, *kwargs, callback: nil)
     end
 
-    def self.execute(*, delay = 0, &block : -> T)
-      new(delay: delay, &block).execute
+    def self.execute(*args, **kwargs, &block : -> T)
+      new(*args, **kwargs, &block).execute
     end
 
-    def self.await(*, delay = 0, &block : -> T)
-      self.execute(delay: delay, &block).wait
+    def self.await(*args, **kwargs, &block : -> T)
+      self.execute(*args, **kwargs, &block).wait
     end
 
     def self.all(*futures : Future(U)) forall U
@@ -176,11 +178,11 @@ module Async
         raise error
       end
 
-      if T.nilable?
+      {% if T.nilable? %}
         ret
-      else
+      {% else %}
         ret.not_nil!
-      end
+      {% end %}
     end
 
     def cancel
@@ -215,7 +217,7 @@ module Async
         @state = State::Completed
         @channel.send(nil)
       rescue ex
-        error = ex
+        self.error = ex
         @channel.send(nil)
       end
     end

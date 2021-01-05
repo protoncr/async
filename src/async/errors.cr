@@ -3,11 +3,23 @@ module Async
 
   class CancelledError < AsyncException; end
 
-  class UncaughtException < AsyncException
+  class UncaughtException(T) < AsyncException
+    getter future : Async::Future(T)
     getter exception : Exception
 
-    def initialize(@exception : Exception)
-      super("Uncaught exception in future:\n#{exception.inspect_with_backtrace}")
+    def initialize(@future : Async::Future(T), @exception : Exception)
+      message = String.build do |str|
+        str << "in future"
+        if name = @future.name
+          str << " '#{name}'"
+        end
+        str << ":\n\n"
+        exception.inspect_with_backtrace.split('\n').each do |ln|
+          str.puts (" " * 4) + ln
+        end
+      end
+
+      super(message)
     end
   end
 end
