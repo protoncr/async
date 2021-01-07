@@ -43,32 +43,48 @@ module Async
       self.execute(*args, **kwargs, &block).wait
     end
 
-    def self.all(futures : Enumerable(Future(U))) forall U
-      channels = Array.new(futures.size) { Channel(U?).new }
+    def self.all(futures : Enumerable(Future(U)), ordered = true) forall U
+      if ordered
+        channels = Array.new(futures.size) { Channel(U?).new }
 
-      futures.zip(channels).each do |f, c|
-        spawn do
-          if f.state <= State::Completed
-            f.wait
+        futures.zip(channels).each do |f, c|
+          spawn do
+            if f.state <= State::Completed
+              f.wait
+            end
+
+            c.send(f.result)
           end
-
-          c.send(f.result)
         end
+
+        channels.map { |c| c.receive }
+      else
+        channel = Channel(U?).new(futures.size)
+
+        futures.each do |f|
+          spawn do
+            if f.state <= State::Completed
+              f.wait
+            end
+
+            c.send(f.result)
+          end
+        end
+
+        Array(U?).new(futures.size) { channel.receive }
       end
-
-      channels.map { |c| c.receive }
     end
 
-    def self.all(futures : Enumerable(Future(U)), &block : U? ->) forall U
-      yield self.all(*futures, &block)
+    def self.all(futures : Enumerable(Future(U)), ordered = true, &block : U? ->) forall U
+      yield self.all(*futures, ordered, &block)
     end
 
-    def self.all(*futures : Future(U)) forall U
-      self.all(futures)
+    def self.all(*futures : Future(U), ordered = true) forall U
+      self.all(futures, odered)
     end
 
-    def self.all(*futures : Future(U), &block : U? ->) forall U
-      self.all(futures, &block)
+    def self.all(*futures : Future(U), ordered = true, &block : U? ->) forall U
+      self.all(futures, ordered, &block)
     end
 
     def self.any(futures : Enumerable(Future(U))) forall U
