@@ -22,4 +22,18 @@ module Async
       super(message)
     end
   end
+
+  class QueueError < Exception; end
+
+  class QueueEmptyError < QueueError
+    def initialize
+      super("Attempted to retrieve a value from an empty queue")
+    end
+  end
+
+  class QueueFullError < QueueError
+    def initialize
+      super("Attempted to add an item to a queue that is already full")
+    end
+  end
 end

@@ -43,31 +43,35 @@ module Async
       self.execute(*args, **kwargs, &block).wait
     end
 
-    def self.all(*futures : Future(U)) forall U
-      channel = Channel(U?).new(futures.size)
+    def self.all(futures : Enumerable(Future(U))) forall U
+      channels = Array.new(futures.size) { Channel(U?).new }
 
-      futures.each do |f|
+      futures.zip(channels).each do |f, c|
         spawn do
           if f.state <= State::Completed
             f.wait
           end
 
-          channel.send(f.result)
+          c.send(f.result)
         end
       end
 
-      arr = [] of U?
-      futures.size.times do
-        arr << channel.receive
-      end
-      arr
+      channels.map { |c| c.receive }
     end
 
-    def self.all(*futures : Future(U), &block : Array(U) ->) forall U
-      yield self.all(*futures)
+    def self.all(futures : Enumerable(Future(U)), &block : U? ->) forall U
+      yield self.all(*futures, &block)
     end
 
-    def self.any(*futures : Future(U)) forall U
+    def self.all(*futures : Future(U)) forall U
+      self.all(futures)
+    end
+
+    def self.all(*futures : Future(U), &block : U? ->) forall U
+      self.all(futures, &block)
+    end
+
+    def self.any(futures : Enumerable(Future(U))) forall U
       channel = Channel(U?).new(1)
 
       futures.each do |f|
@@ -87,11 +91,19 @@ module Async
       value
     end
 
-    def self.any(*futures : Future(U), &block : U ->) forall U
+    def self.any(futures : Enumerable(Future(U)), &block : U ->) forall U
       yield self.any(*futures)
     end
 
-    def self.race(*futures : Future(U)) forall U
+    def self.any(*futures : Future(U), &block : U ->) forall U
+      yield self.any(futures)
+    end
+
+    def self.any(*futures : Future(U)) forall U
+      self.any(futures)
+    end
+
+    def self.race(futures : Enumerable(Future(U))) forall U
       channel = Channel(U?).new(1)
 
       futures.each do |f|
@@ -109,8 +121,16 @@ module Async
       value
     end
 
-    def self.race(*futures : Future(U), &block : U ->) forall U
+    def self.race(futures : Enumerable(Future(U)), &block : U ->) forall U
       yield self.race(*futures)
+    end
+
+    def self.race(*futures : Future(U), &block : U ->) forall U
+      yield self.race(futures)
+    end
+
+    def self.race(*futures : Future(U)) forall U
+      self.race(futures)
     end
 
     def success?
