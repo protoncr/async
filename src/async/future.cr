@@ -13,7 +13,7 @@ module Async
     getter error : Exception?
 
     property name : String?
-    property delay : Int32
+    property delay : Time::Span
     property callback : Proc(T)?
 
     @channel : Channel(Nil)
@@ -22,7 +22,7 @@ module Async
     def initialize(*, name : String? = nil, delay = 0, callback : Proc(T)?)
       @name = name
       @state = State::Idle
-      @delay = delay
+      @delay = delay.is_a?(Number) ? delay.seconds : delay
       @callback = callback
       @channel = Channel(Nil).new
     end
@@ -67,7 +67,7 @@ module Async
               f.wait
             end
 
-            c.send(f.result)
+            channel.send(f.result)
           end
         end
 
@@ -103,7 +103,6 @@ module Async
       end
 
       value = channel.receive
-      channel.close
       value
     end
 
@@ -133,7 +132,6 @@ module Async
       end
 
       value = channel.receive
-      channel.close
       value
     end
 
@@ -193,7 +191,7 @@ module Async
         return self
       end
 
-      @state = @delay > 0 ? State::Delayed : State::Running
+      @state = @delay.total_seconds > 0 ? State::Delayed : State::Running
 
       @fiber = spawn { run_compute }
       self
@@ -240,11 +238,9 @@ module Async
         return
       end
 
-      if (delay = @delay) && delay > 0
-        sleep delay
-        if @state >= State::Canceled
-          return
-        end
+      if @state = State::Delayed
+        sleep @delay
+        return if @state == State::Canceled
         @state = State::Running
       end
 
