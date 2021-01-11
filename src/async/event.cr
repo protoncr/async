@@ -10,12 +10,8 @@ module Async
       @channel = Channel(Status).new(1)
     end
 
-    async def wait
-      loop do
-        if @channel.receive == Status::Set
-          return
-        end
-      end
+    def wait
+      Future.execute { sync_wait }
     end
 
     def set
@@ -28,6 +24,14 @@ module Async
 
     def set?
       @status == Status::Set
+    end
+
+    private def sync_wait
+      loop do
+        if @channel.receive == Status::Set
+          return
+        end
+      end
     end
   end
 end

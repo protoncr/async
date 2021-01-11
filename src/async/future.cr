@@ -43,7 +43,7 @@ module Async
       self.execute(*args, **kwargs, &block).wait
     end
 
-    def self.all(futures : Enumerable(Future(U)), ordered = true) forall U
+    def self.all(futures : Enumerable(Future(U)), ordered = false) forall U
       if ordered
         channels = Array.new(futures.size) { Channel(U?).new }
 
@@ -75,15 +75,15 @@ module Async
       end
     end
 
-    def self.all(futures : Enumerable(Future(U)), ordered = true, &block : U? ->) forall U
+    def self.all(futures : Enumerable(Future(U)), ordered = false, &block : U? ->) forall U
       yield self.all(*futures, ordered, &block)
     end
 
-    def self.all(*futures : Future(U), ordered = true) forall U
+    def self.all(*futures : Future(U), ordered = false) forall U
       self.all(futures, odered)
     end
 
-    def self.all(*futures : Future(U), ordered = true, &block : U? ->) forall U
+    def self.all(*futures : Future(U), ordered = false, &block : U? ->) forall U
       self.all(futures, ordered, &block)
     end
 

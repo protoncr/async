@@ -64,7 +64,7 @@ future.wait!
 
 Insipred by the JavaScript promise methods with the same names, the `.all`, `.any`, and `.race` methods can be used to wait for certain things to happen with your futures.
 
-`.all` accepts _N_ futures and will wait for them all to finish before returning. The return value of `.all` is an `Array(T)` where `T` is the type(s) of the futures.
+`.all` accepts _N_ futures and will wait for them all to finish before returning. The return value of `.all` is an `Array(T)` where `T` is the type(s) of the futures. If `ordered` is set to true, futures will be resolved and returned in order.
 
 `.any` accepts _N_ futures and returns the value of the first future to complete successfully.
 
@@ -100,6 +100,8 @@ Async also includes the loved and hated `async` / `await`.
 The `async` macro basically works by wrapping the body of your function in a `Future` and executing that future immediately. Theoretically most functions should work just fine as async functions, but more complex function definitions are still untested. Most specifically functions with blocks.
 
 `await` can be used on async methods and futures to wait for the return value. All it really does currently is call `.wait!`. If an exception is raised inside the future `await` will raise an `Async::UncaughtException` which contains the uncaught exception.
+
+These are optional (so as not to pollute the global namespace with unwanted macros), so if you want to use it be sure to require `future/macros`.
 
 ## Contributing
 

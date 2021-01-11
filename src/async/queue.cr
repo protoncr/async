@@ -29,7 +29,12 @@ module Async
 
     # Remove and return an item from the queue. If the queue is empty, wait until
     # an item is available.
-    async def get
+    def get
+      Future.execute { get_sync }
+    end
+
+    # :ditto:
+    def get_sync
       loop do
         if @buffer.size > 0
           return @mutex.synchronize { @buffer.pop }
@@ -48,7 +53,11 @@ module Async
 
     # Put an item into the queue. If the queue is full, wait until a free slot
     # is available before adding the item.
-    async def put(item : T)
+    def put(item : T)
+      Future.execute { put_sync(item) }
+    end
+
+    def put_sync(item : T)
       loop do
         if !max_size || size < max_size.not_nil!
           break @mutex.synchronize { @buffer.push(item) }
