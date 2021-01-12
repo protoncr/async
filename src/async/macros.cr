@@ -21,10 +21,6 @@ macro async(method)
     {% args_str += "&#{method.block_arg}" %}
   {% end %}
 
-  def {{ method.name }}_sync({{ args_str.id }})
-    {{ method.body }}
-  end
-
   {% if method.block_arg %}
     def {{ method.name }}(*args, **kwargs, {{ "&#{method.block_arg}".id }})
         Async::Future.execute { {{ method.name }}_sync(*args, **kwargs, {{ "&#{method.block_arg.name}".id }}) }
@@ -34,6 +30,12 @@ macro async(method)
       Async::Future.execute { {{ method.name }}_sync(*args, **kwargs) }
     end
   {% end %}
+
+  def {{ method.name }}_sync({{ args_str.id }})
+    {{ method.body }}
+  end
+
+  {% debug %}
 end
 
 # Wait for a future to return. Raises `Async::UncaughtException` if an
