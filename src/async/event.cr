@@ -7,31 +7,33 @@ module Async
 
     def initialize
       @status = Status::Unset
-      @channel = Channel(Status).new(1)
     end
 
     def wait
-      Future.execute { sync_wait }
+      Future.execute { wait_sync }
+    end
+
+    def wait(&block : -> U) forall U
+      Future(U).execute { wait_sync; block.call }
+    end
+
+    def wait_sync
+      loop do
+        break if @status == Status::Set
+        sleep 0.01
+      end
     end
 
     def set
-      @channel.send(Status::Set)
+      @status = Status::Set
     end
 
     def clear
-      @channel.send(Status::Unset)
+      @status = Status::Unset
     end
 
     def set?
       @status == Status::Set
-    end
-
-    private def sync_wait
-      loop do
-        if @channel.receive == Status::Set
-          return
-        end
-      end
     end
   end
 end
