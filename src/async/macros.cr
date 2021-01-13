@@ -34,8 +34,6 @@ macro async(method)
   def {{ method.name }}_sync({{ args_str.id }})
     {{ method.body }}
   end
-
-  {% debug %}
 end
 
 # Wait for a future to return. Raises `Async::UncaughtException` if an
