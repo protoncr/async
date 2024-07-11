@@ -80,7 +80,7 @@ module Async
     end
 
     def self.all(*futures : Future(U), ordered = false) forall U
-      self.all(futures, odered)
+      self.all(futures, ordered)
     end
 
     def self.all(*futures : Future(U), ordered = false, &block : U? ->) forall U
